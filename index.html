@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Simulator 99 France</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Style pour le cadre blanc opaque */
+        .clan-info-box {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto 50px; /* Ajout de la marge en bas */
+            max-width: 800px; /* Largeur maximale du cadre */
+            text-align: center; /* Centrer le contenu */
+            position: relative; /* Positionnement relatif pour placer l'image */
+        }
+
+        .clan-info-box img {
+            position: absolute;
+            top: 20px; /* Espace en haut */
+            right: 20px; /* Espace à droite */
+            width: 150px; /* Largeur de l'image agrandie */
+            height: auto; /* Hauteur automatique pour conserver les proportions */
+            border-radius: 10px; /* Coins arrondis */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); /* Ombre légère */
+        }
+
+        /* Style pour la liste des membres */
+        .member-list {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 20px 50px; /* Ajout de la marge en bas */
+            max-width: 300px; /* Largeur maximale de la liste */
+            position: absolute; /* Positionnement absolu */
+            left: 20px; /* Décalage à gauche */
+            top: 150px; /* Décalage vers le bas */
+        }
+
+        .member-list ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .member-list ul li {
+            margin-bottom: 10px;
+        }
+
+        .member-list ul li:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pet Simulator 99 France</h1>
+        <div class="menu-container">
+            <div class="menu-icon"></div>
+            <div class="dropdown-menu">
+                <ul>
+                    <li><a href="#contact">Nous contacter</a></li> <!-- Ajout de l'ancre -->
+                    <li><a href="https://discord.gg/qcAAwqJXER">Discord PS99 France</a></li> <!-- Lien modifié -->
+                    <li><a href="#">Discord Clan</a></li>
+                    <li><a href="#">MEWT</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ajout d'une section avec l'ancre "contact" -->
+    <section id="contact">
+        <h2></h2>
+        <!-- Votre formulaire de contact ici -->
+    </section>
+
+    <!-- Boîte d'informations du clan -->
+    <div class="clan-info-box" id="clanInfoBox">
+        <h2 id="clanName"></h2>
+        <p><strong>Date de création :</strong> <span id="creationDate"></span></p>
+        <p><strong>Nombre de membres :</strong> <span id="numMembers"></span></p>
+        <p><strong>Nombre d'officiers :</strong> <span id="numOfficers"></span></p>
+        <p><strong>Capacité du clan :</strong> <span id="clanCapacity"></span></p>
+        <p><strong>Niveau du clan :</strong> <span id="guildLevel"></span></p>
+        <p><strong>Description du clan :</strong> <span id="clanDescription"></span></p>
+        <img src="Images/ange.png" alt="Ange" /> <!-- Image de l'ange -->
+    </div>
+
+    <!-- Section pour la liste des membres du clan -->
+    <section class="member-list" id="memberListSection">
+        <h2>Membres du clan</h2>
+        <ul id="memberList">
+            <!-- La liste des membres sera affichée ici -->
+        </ul>
+    </section>
+
+    <script>
+        // Fonction pour récupérer les informations du clan depuis l'API
+        async function fetchClanInfo() {
+            try {
+                const response = await fetch('https://biggamesapi.io/api/clan/MEWT');
+                const clanInfo = await response.json();
+                displayClanInfo(clanInfo);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des informations du clan :', error.message);
+            }
+        }
+
+        // Fonction pour afficher les informations du clan
+        async function displayClanInfo(clanInfo) {
+            const clanName = clanInfo.data.Name;
+            const creationDate = '04/12/2023 21:53:35'; // Remplacer par la date réelle
+            const numMembers = clanInfo.data.Members.length + 1;
+            const numOfficers = clanInfo.data.OfficerCapacity - 1;
+            const clanCapacity = clanInfo.data.MemberCapacity;
+            const guildLevel = clanInfo.data.GuildLevel;
+            const clanDescription = clanInfo.data.Desc;
+
+            document.getElementById('clanName').textContent = clanName;
+            document.getElementById('creationDate').textContent = creationDate;
+            document.getElementById('numMembers').textContent = numMembers;
+            document.getElementById('numOfficers').textContent = numOfficers;
+            document.getElementById('clanCapacity').textContent = clanCapacity;
+            document.getElementById('guildLevel').textContent = guildLevel;
+            document.getElementById('clanDescription').textContent = clanDescription;
+
+            // Afficher la boîte d'informations du clan une fois les informations récupérées
+            document.getElementById('clanInfoBox').style.display = 'block';
+
+            // Afficher la liste des membres
+            await displayMemberList(clanInfo.data.Members);
+        }
+
+// Fonction pour récupérer le nom d'utilisateur à partir de l'URL du profil Roblox
+async function getUsernameFromProfileUrl(profileUrl) {
+    try {
+        const response = await fetch(profileUrl);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const scriptContent = doc.querySelector('script[data-page]')?.textContent;
+        if (scriptContent) {
+            const start = scriptContent.indexOf('"Username":"') + 12;
+            const end = scriptContent.indexOf('","UserID"');
+            return scriptContent.substring(start, end);
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error('Erreur lors de la récupération du nom d\'utilisateur :', error.message);
+        return null; // Retourne null en cas d'erreur
+    }
+}
+
+// Fonction pour afficher la liste des membres du clan sur la page web
+async function displayMemberList(members) {
+    const memberList = document.getElementById('memberList');
+    const memberListSection = document.getElementById('memberListSection');
+    memberList.innerHTML = ''; // Efface le contenu existant
+
+    for (const member of members) {
+        try {
+            const profileUrl = `https://www.roblox.com/users/${member.UserID}/profile`;
+            const user = await getUsername(profileUrl);
+            if (user !== null) {
+                // Créer un élément de liste avec le nom d'utilisateur comme texte
+                const li = document.createElement('li');
+                li.textContent = user;
+                memberList.appendChild(li);
+            } else {
+                // Si le nom d'utilisateur est introuvable, afficher un message
+                memberList.innerHTML += `<li>Nom inconnu</li>`;
+            }
+        } catch (error) {
+            console.error('Erreur lors de la récupération du nom d\'utilisateur :', error.message);
+            // Si une erreur se produit, afficher un message d'erreur
+            memberList.innerHTML += `<li>Erreur lors de la récupération du nom d'utilisateur</li>`;
+        }
+    }
+
+    // Afficher la section de la liste des membres
+    memberListSection.style.display = 'block';
+}
+
+        // Fonction pour récupérer le nom d'utilisateur à partir de l'URL du profil Roblox
+        async function getUsername(profileUrl) {
+            try {
+                const response = await fetch(profileUrl);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const username = doc.querySelector('meta[name="twitter:title"]').getAttribute('content').replace(' (@Roblox)', '');
+                return username.trim();
+            } catch (error) {
+                console.error('Erreur lors de la récupération du nom du joueur :', error.message);
+                return null; // Retourne null en cas d'erreur
+            }
+        }
+
+        // Appel de la fonction pour récupérer les informations du clan au chargement de la page
+        fetchClanInfo();
+    </script>
+
+    <script>
+        var menuContainer = document.querySelector('.menu-container');
+        var menuIcon = document.querySelector('.menu-icon');
+        var dropdownMenu = document.querySelector('.dropdown-menu');
+        var isMenuOpen = false;
+
+        menuContainer.addEventListener('mouseenter', function() {
+            isMenuOpen = true;
+            dropdownMenu.style.display = 'initial';
+            dropdownMenu.style.opacity = '1';
+            dropdownMenu.style.transform = 'translateY(5px)'; /* Ajustement de la position verticale */
+        });
+
+        menuContainer.addEventListener('mouseleave', function(e) {
+            var isMouseStillOverMenu = menuContainer.contains(e.relatedTarget) || dropdownMenu.contains(e.relatedTarget);
+            if (!isMouseStillOverMenu && !isMenuOpen) {
+                dropdownMenu.style.opacity = '0';
+                setTimeout(function() {
+                    dropdownMenu.style.display = 'none';
+                }, 500); // Délai avant de masquer le menu
+            }
+        });
+
+        dropdownMenu.addEventListener('mouseenter', function() {
+            isMenuOpen = true;
+            dropdownMenu.style.opacity = '1';
+        });
+
+        dropdownMenu.addEventListener('mouseleave', function(e) {
+            var isMouseStillOverMenu = menuContainer.contains(e.relatedTarget) || dropdownMenu.contains(e.relatedTarget);
+            if (!isMouseStillOverMenu) {
+                dropdownMenu.style.opacity = '0';
+                setTimeout(function() {
+                    dropdownMenu.style.display = 'none';
+                    isMenuOpen = false;
+                }, 500); // Délai avant de masquer le menu
+            }
+        });
+
+    </script>
+</body>
+</html>
